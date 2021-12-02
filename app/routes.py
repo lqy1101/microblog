@@ -1,13 +1,19 @@
-from flask import render_template, redirect, flash, url_for
+from flask import render_template, redirect, flash, url_for, request
+from flask_login import current_user, login_user, logout_user, login_required
+from werkzeug.urls import url_parse
 
+from app import db
 from app.forms import LoginForm
+from app.forms import RegistrationForm
+from app.models import User
 from . import app
 
 
 @app.route('/')
 @app.route('/index')
+@login_required
 def index():
-    user = {'username': 'Lim_QgyG'}
+    # user = {'username': 'Lim_QgyG'}
     posts = [
         {
             'author': {'username': 'John'},
@@ -18,15 +24,46 @@ def index():
             'body': 'The Avengers movie was so cool!'
         }
     ]
-    return render_template('index.html', user=user, title='Lim-QgyG', posts=posts)
+    return render_template('index.html', title='Lim-QgyG', posts=posts)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     login_form = LoginForm()
     if login_form.validate_on_submit():
-        flash('Login requested for user {},remember_me={}'.format(login_form.username.data, login_form.remember_me.data))
-        return redirect(url_for('index'))
+        # flash('Login requested for user {},remember_me={}'.format(login_form.username.data, login_form.remember_me.data))
+        user = User.query.filter_by(username=login_form.username.data).first()
+        if user is None or not user.check_password(login_form.password.data):
+            flash('错误的用户名或密码')
+            return redirect(url_for('index'))
+        login_user(user, login_form.remember_me.data)
+
+        # 重定向到原页面
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
     return render_template('login.html', form=login_form, title="登录")
 
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+@app.route('/register', methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data, email=form.email.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash("用户名{};邮箱为{},注册成功".format(user.username, user.email))
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form, title='注册')
