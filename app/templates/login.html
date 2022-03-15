@@ -19,7 +19,12 @@
         </p>
         <p>{{ form.remember_me() }} {{ form.remember_me.label }}</p>
         <p>{{ form.submit }} </p>
+        <p><a href="{{ url_for('register') }}">注册</a></p>
+        <p>
+            忘记密码？
+            <a href="{{ url_for('reset_password_request') }}">点击这里</a>
+        </p>
     </form>
-    <p><a href="{{ url_for('register') }}">注册</a></p>
+
 {% endblock %}
 
