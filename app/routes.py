@@ -28,7 +28,7 @@ def index():
         post = Post(body=form.post.data, author=current_user)
         db.session.add(post)
         db.session.commit()
-        flash('Your post is now live!')
+        flash('提交成功')
         return redirect(url_for('index'))
     # posts = current_user.followed_posts().all()
     # posts = Post.query.order_by(Post.timestamp.desc()).all()
@@ -114,14 +114,14 @@ def edit_profile():
 def follow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('User {} not found'.format(username))
+        flash('用户名 {} 没有找到'.format(username))
         return redirect(url_for('index'))
     if user == current_user:
-        flash('You cannot follow yourself')
+        flash('你不能关注自己')
         return redirect(url_for('user', username=username))
     current_user.follow(user)
     db.session.commit()
-    flash('You are following {}'.format(username))
+    flash('成功关注 {}'.format(username))
     return redirect(url_for('user', username=username))
 
 
@@ -130,14 +130,14 @@ def follow(username):
 def unfollow(username):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        flash('User {} not found'.format(username))
+        flash('用户名 {} 没有找到'.format(username))
         return redirect(url_for('index'))
     if user == current_user:
-        flash('You cannot unfollow yourself')
+        flash('你不能取消关注自己')
         return redirect(url_for('user', username=username))
     current_user.unfollow(user)
     db.session.commit()
-    flash('You are not following {}'.format(username))
+    flash('成功取关 {}'.format(username))
     return redirect(url_for('user', username=username))
 
 
@@ -150,7 +150,7 @@ def reset_password_request():
         user = User.query.filter_by(email=form.email.data).first()
         if user:
             send_password_reset_email(user)
-        flash("Check your email for the instructions to reset your password")
+        flash("检查你的邮箱去重置密码")
         return redirect(url_for('login'))
     return render_template('reset_password_request.html', title='reset password', form=form)
 
@@ -166,7 +166,7 @@ def reset_password(token):
     if form.validate_on_submit():
         user.set_password(form.password.data)
         db.session.commit()
-        flash('Your password has been reset.')
+        flash('密码已经更改')
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
 
